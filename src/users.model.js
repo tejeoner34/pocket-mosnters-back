@@ -10,7 +10,7 @@ export async function getUsers() {
         await client.connect();       
         const db = client.db('PocketMonsters');
         const users = db.collection('users');
-        return await users.find().toArray();
+        return await users.find().sort({points: -1}).toArray();
     } catch(err) {
         console.log(err);
     }finally {

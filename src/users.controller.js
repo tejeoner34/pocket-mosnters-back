@@ -17,3 +17,18 @@ export async function updateUserInfoController(req, res) {
     const updatedUserData = await updateUserInfo(user);
     res.json(updatedUserData);
 }
+
+export async function getTopUsersController(req, res) {
+    let topUsers = [];
+    const {userName} = req.body;
+    const sortedUsers = await getUsers();
+    for(let i = 0; i < 3; i++) {
+        topUsers.push({...sortedUsers[i], position: i + 1});
+    }
+    const userPosition = sortedUsers.findIndex(user => user.userName === userName) + 1;
+    const user = sortedUsers.find(user => user.userName === userName);
+    res.json({
+        topUsers,
+        user: {...user, position: userPosition}
+    })
+} 
