@@ -63,7 +63,8 @@ io.on('connection', socket => {
                 ok: true,
                 accept: true,
                 message: 'rivalAccept',
-                roomId: newRoom
+                roomId: newRoom,
+                userId
             })
         } else {
             socket.broadcast.to(challengerId).emit('challenge-response', {
@@ -82,6 +83,13 @@ io.on('connection', socket => {
         }
 
         socket.join(roomId);
+    });
+
+    socket.on('send-pokemon-data', ({pokemon, opponentUserId}) => {
+        console.log({pokemon, opponentUserId});
+        socket.broadcast.to(opponentUserId).emit('get-pokemon-data', {
+            pokemon
+        });
     })
 
     //
