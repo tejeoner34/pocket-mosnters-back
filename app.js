@@ -56,7 +56,8 @@ io.on('connection', socket => {
             const newRoom = roomId;
             rooms.push({
                 roomId: newRoom,
-                users: [userId]
+                users: [userId],
+                usersMoves: []
             });
             socket.join(newRoom);
 
@@ -94,6 +95,36 @@ io.on('connection', socket => {
         socket.broadcast.to(opponentUserId).emit('get-pokemon-data', {
             pokemon
         });
+    });
+
+    socket.on('select-move', ({moveData, attackerId, receiverId, roomId}) => {
+        const roomIndex = rooms.findIndex(room => room.roomId === roomId);
+
+        if(roomIndex !== -1) {
+            rooms[roomIndex].usersMoves.push({
+                moveData, attackerId, receiverId
+            });
+
+
+            if(rooms[roomIndex].usersMoves.length === 2) {
+                console.log(rooms[roomIndex].usersMoves)
+
+                // socket.broadcast.to(rooms[roomIndex].usersMoves[0].receiverId).emit('get-opponents-move', {
+                //     move: rooms[roomIndex].usersMoves[0].moveData,
+                //     attacker: rooms[roomIndex].usersMoves[0].attackerId
+                // });
+                // socket.broadcast.to(rooms[roomIndex].usersMoves[1].receiverId).emit('get-opponents-move', {
+                //     move: rooms[roomIndex].usersMoves[1].moveData,
+                //     attacker: rooms[roomIndex].usersMoves[1].attackerId
+                // });
+                io.in(roomId).emit('get-opponents-move', rooms[roomIndex].usersMoves);
+
+                rooms[roomIndex].usersMoves = [];
+                console.log(rooms[roomIndex].usersMoves)
+
+            }
+        }
+        
     })
 
     ///////////////
