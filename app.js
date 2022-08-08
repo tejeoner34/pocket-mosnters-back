@@ -59,6 +59,7 @@ io.on('connection', socket => {
                 users: [userId]
             });
             socket.join(newRoom);
+
             socket.broadcast.to(challengerId).emit('challenge-response', {
                 ok: true,
                 accept: true,
@@ -77,22 +78,25 @@ io.on('connection', socket => {
 
     socket.on('join-room', ({userId, roomId}) => {
         const foundRoomIndex = rooms.findIndex(room => room.roomId === roomId);
-
         if(foundRoomIndex !== -1) {
             rooms[foundRoomIndex].users.push(userId);
+            socket.join(roomId);
+            const numberOfUsersInRoom = rooms[foundRoomIndex].users.length;
+            let infoToSend = {roomComplete: false};
+            if(numberOfUsersInRoom === 2) {
+                infoToSend = {roomComplete: true};
+            }
+            io.in(roomId).emit('all-users-in-room', infoToSend);
         }
-
-        socket.join(roomId);
     });
 
     socket.on('send-pokemon-data', ({pokemon, opponentUserId}) => {
-        console.log({pokemon, opponentUserId});
         socket.broadcast.to(opponentUserId).emit('get-pokemon-data', {
             pokemon
         });
     })
 
-    //
+    ///////////////
     socket.on('create-room', ({roomId, userId}) => {
         const roomAlreadyExists = openRooms.find(r => r.roomId === roomId);
 
