@@ -107,7 +107,6 @@ io.on('connection', socket => {
 
 
             if(rooms[roomIndex].usersMoves.length === 2) {
-                console.log(rooms[roomIndex].usersMoves)
 
                 // socket.broadcast.to(rooms[roomIndex].usersMoves[0].receiverId).emit('get-opponents-move', {
                 //     move: rooms[roomIndex].usersMoves[0].moveData,
@@ -120,8 +119,6 @@ io.on('connection', socket => {
                 io.in(roomId).emit('get-opponents-move', rooms[roomIndex].usersMoves);
 
                 rooms[roomIndex].usersMoves = [];
-                console.log(rooms[roomIndex].usersMoves)
-
             }
         }
         
