@@ -31,6 +31,21 @@ const users = [];
 const rooms = [];
 
 io.on("connection", (socket) => {
+
+  socket.on("disconnect", () => {
+    const abandonedRoom = rooms.find(room => 
+      room.users.find(user=> user === socket.id)
+    )?.roomId;
+    const abandonedRoomIndex = rooms.find(room => room.roomId === abandonedRoom);
+    if(abandonedRoom) {
+      rooms.splice(abandonedRoomIndex, 1);
+      io.in(abandonedRoom).emit("rival-disconnect", {
+        userId: socket.id,
+        disconnect: true
+      });
+    }
+  });
+
   const userId = socket.id;
   users.push(userId);
   socket.emit("get user id", userId);
@@ -96,8 +111,24 @@ io.on("connection", (socket) => {
           infoToSend = { roomComplete: true };
         }
       io.in(roomId).emit("all-users-in-room", infoToSend);
+      console.log(rooms)
     }
   });
+
+  socket.on('leave-room', ({userId, roomId}) => {
+    const abandonedRoom = rooms.find(room => 
+      room.users.find(user=> user === userId)
+    )?.roomId;
+    const abandonedRoomIndex = rooms.findIndex(room => room.roomId === roomId);
+    if(abandonedRoomIndex !== -1) {
+      socket.leave(roomId);
+      rooms.splice(abandonedRoomIndex, 1);
+      io.in(abandonedRoom).emit("rival-disconnect", {
+        userId: userId,
+        disconnect: true
+      });
+    }
+  })
 
   socket.on("send-pokemon-data", ({ pokemon, opponentUserId }) => {
     socket.broadcast.to(opponentUserId).emit("get-pokemon-data", {
@@ -109,26 +140,36 @@ io.on("connection", (socket) => {
     const roomIndex = rooms.findIndex((room) => room.roomId === roomId);
 
     if (roomIndex !== -1) {
-      rooms[roomIndex].usersMoves.push({
-        moveData,
-        attackerId,
-        receiverId,
-      });
+      // rooms[roomIndex].usersMoves.push({
+      //   moveData,
+      //   attackerId,
+      //   receiverId,
+      // });
 
-      if (rooms[roomIndex].usersMoves.length === 2) {
-        // socket.broadcast.to(rooms[roomIndex].usersMoves[0].receiverId).emit('get-opponents-move', {
-        //     move: rooms[roomIndex].usersMoves[0].moveData,
-        //     attacker: rooms[roomIndex].usersMoves[0].attackerId
-        // });
-        // socket.broadcast.to(rooms[roomIndex].usersMoves[1].receiverId).emit('get-opponents-move', {
-        //     move: rooms[roomIndex].usersMoves[1].moveData,
-        //     attacker: rooms[roomIndex].usersMoves[1].attackerId
-        // });
-        io.in(roomId).emit("get-opponents-move", rooms[roomIndex].usersMoves);
+      // if (rooms[roomIndex].usersMoves.length === 2) {
+      //   io.in(roomId).emit("get-opponents-move", rooms[roomIndex].usersMoves);
+      //   rooms[roomIndex].usersMoves = [];
+      // }
 
-        rooms[roomIndex].usersMoves = [];
-      }
+      // se podría cambiar esto a envío directo al id del usuario que tenga que recibirlo y así evitamos que pete en el front
+
+      // io.in(roomId).emit("get-opponents-move", rooms[roomIndex].usersMoves);
+      socket.broadcast.to(roomId).emit("get-opponents-move", moveData)
+
     }
+  });
+
+  socket.on('set-timer', ({userId, roomId}) => {
+    const seconds = 20;
+    socket.broadcast.to(roomId).emit('get-timer', {
+      seconds
+    });
+  });
+
+  socket.on("game-over", ({userId, roomId}) => {
+    socket.broadcast.to(roomId).emit("get-game-over", {
+      userId
+    });
   });
 
   ///////////////
@@ -150,7 +191,6 @@ io.on("connection", (socket) => {
         socket.join(roomId);
       }
     }
-    console.log(openRooms);
   });
 
   socket.on("send test", (data) => {
