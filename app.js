@@ -75,6 +75,7 @@ io.on("connection", (socket) => {
           roomId: newRoom,
           users: [userId],
           usersMoves: [],
+          usersDoneWithTurn: []
         });
         socket.join(newRoom);
 
@@ -111,7 +112,6 @@ io.on("connection", (socket) => {
           infoToSend = { roomComplete: true };
         }
       io.in(roomId).emit("all-users-in-room", infoToSend);
-      console.log(rooms)
     }
   });
 
@@ -165,6 +165,21 @@ io.on("connection", (socket) => {
       seconds
     });
   });
+
+  socket.on('turn-over', ({userId, roomId}) => {
+    const room = rooms.find(room => room.roomId === roomId);
+    if(room) {
+      console.log(room);
+      room.usersDoneWithTurn.push(userId);
+      console.log(room);
+      if(room.usersDoneWithTurn.length === 2) {
+        room.usersDoneWithTurn.splice(0, 2);
+        io.in(roomId).emit('get-turn-over', true);
+      }else {
+        io.in(roomId).emit('get-turn-over', false);
+      }
+    }
+  })
 
   socket.on("game-over", ({userId, roomId}) => {
     socket.broadcast.to(roomId).emit("get-game-over", {
