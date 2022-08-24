@@ -169,9 +169,7 @@ io.on("connection", (socket) => {
   socket.on('turn-over', ({userId, roomId}) => {
     const room = rooms.find(room => room.roomId === roomId);
     if(room) {
-      console.log(room);
       room.usersDoneWithTurn.push(userId);
-      console.log(room);
       if(room.usersDoneWithTurn.length === 2) {
         room.usersDoneWithTurn.splice(0, 2);
         io.in(roomId).emit('get-turn-over', true);
@@ -208,22 +206,14 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("send test", (data) => {
-    console.log(data);
-  });
-
   socket.on("send-message", (data) => {
-    console.log(data);
-    console.log(data.arenaId);
+
     // socket.emit('get message', data);
     socket.broadcast.to(data.arenaId).emit("get message", data);
     // io.sockets.emit('get message', data);
   });
 });
 
-// app.listen(PORT, () => {
-//     console.log(`Server up in port: ${PORT}`)
-// });
 
 server.listen(PORT, console.log(`Server is up at port ${PORT}`));
 
