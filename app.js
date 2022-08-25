@@ -18,7 +18,7 @@ const io = new Server(server, {
   },
 });
 
-const allowedOrigins = ["https://startling-cupcake-ce0148.netlify.app/"];
+const allowedOrigins = ["https://startling-cupcake-ce0148.netlify.app"];
 const corsOptions = {
   origin: allowedOrigins,
 };
