@@ -115,6 +115,13 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on('reset-users-in-room', (roomId) => {
+    const currentRoomIndex = rooms.findIndex(room => room.roomId === roomId);
+    if(currentRoomIndex !== -1) {
+      rooms[currentRoomIndex].users = [];
+    }
+  });
+
   socket.on('leave-room', ({userId, roomId}) => {
     const abandonedRoom = rooms.find(room => 
       room.users.find(user=> user === userId)
