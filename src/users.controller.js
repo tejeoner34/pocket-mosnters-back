@@ -14,7 +14,9 @@ export async function createNewUserController(req, res) {
 
 export async function updateUserInfoController(req, res) {
     const user = {...req.body};
+    console.log(user, 'user en controller');
     const updatedUserData = await updateUserInfo(user);
+    console.log(updatedUserData, 'updated user en controller')
     res.json(updatedUserData);
 }
 

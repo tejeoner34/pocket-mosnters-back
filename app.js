@@ -13,8 +13,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST", "PATCH"],
+    origin: "https://startling-cupcake-ce0148.netlify.app",
   },
 });
 

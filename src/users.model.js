@@ -3,9 +3,9 @@ dotenv.config();
 import { MongoClient } from "mongodb";
 
 
-const client = new MongoClient(process.env.MONGO_URI);
 
 export async function getUsers() {
+    const client = new MongoClient(process.env.MONGO_URI);
     try {
         await client.connect();       
         const db = client.db('PocketMonsters');
@@ -19,6 +19,7 @@ export async function getUsers() {
 }
 
 export async function createNewUser(userName) {
+    const client = new MongoClient(process.env.MONGO_URI);
     try {
         await client.connect();       
         const db = client.db('PocketMonsters');
@@ -34,6 +35,7 @@ export async function createNewUser(userName) {
 }
 
 export async function checkIfUserExists(userName) {
+    const client = new MongoClient(process.env.MONGO_URI);
     try {
         await client.connect();       
         const db = client.db('PocketMonsters');
@@ -47,6 +49,7 @@ export async function checkIfUserExists(userName) {
 }
 
 export async function updateUserInfo(user) {
+    const client = new MongoClient(process.env.MONGO_URI);
     try {
         await client.connect();       
         const db = client.db('PocketMonsters');
