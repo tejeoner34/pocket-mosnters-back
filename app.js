@@ -18,7 +18,9 @@ const io = new Server(server, {
   },
 });
 
-const allowedOrigins = ["https://startling-cupcake-ce0148.netlify.app"];
+const allowedOrigins = [
+  "https://startling-cupcake-ce0148.netlify.app"
+];
 const corsOptions = {
   origin: allowedOrigins,
 };
@@ -31,17 +33,18 @@ const users = [];
 const rooms = [];
 
 io.on("connection", (socket) => {
-
   socket.on("disconnect", () => {
-    const abandonedRoom = rooms.find(room => 
-      room.users.find(user=> user === socket.id)
+    const abandonedRoom = rooms.find((room) =>
+      room.users.find((user) => user === socket.id)
     )?.roomId;
-    const abandonedRoomIndex = rooms.find(room => room.roomId === abandonedRoom);
-    if(abandonedRoom) {
+    const abandonedRoomIndex = rooms.find(
+      (room) => room.roomId === abandonedRoom
+    );
+    if (abandonedRoom) {
       rooms.splice(abandonedRoomIndex, 1);
       io.in(abandonedRoom).emit("rival-disconnect", {
         userId: socket.id,
-        disconnect: true
+        disconnect: true,
       });
     }
   });
@@ -75,7 +78,8 @@ io.on("connection", (socket) => {
           roomId: newRoom,
           users: [userId],
           usersMoves: [],
-          usersDoneWithTurn: []
+          usersDoneWithTurn: [],
+          usersTurn: []
         });
         socket.join(newRoom);
 
@@ -107,35 +111,52 @@ io.on("connection", (socket) => {
         socket.join(roomId);
       }
       const numberOfUsersInRoom = rooms[foundRoomIndex].users.length;
-        let infoToSend = { roomComplete: false };
-        if (numberOfUsersInRoom === 2) {
-          infoToSend = { roomComplete: true };
-        }
+      let infoToSend = { roomComplete: false };
+      if (numberOfUsersInRoom === 2) {
+        infoToSend = { roomComplete: true };
+      }
       io.in(roomId).emit("all-users-in-room", infoToSend);
     }
   });
 
-  socket.on('reset-users-in-room', (roomId) => {
-    const currentRoomIndex = rooms.findIndex(room => room.roomId === roomId);
-    if(currentRoomIndex !== -1) {
+  socket.on("pokemon-speed-equal", ({ userId, roomId }) => {
+    const currentRoomIndex = rooms.findIndex((room) => room.roomId === roomId);
+    if (currentRoomIndex !== -1) {
+      rooms[currentRoomIndex].usersTurn.push(userId);
+      if(rooms[currentRoomIndex].usersTurn.length === 2) {
+        const turns = {
+          [rooms[currentRoomIndex].usersTurn[0]] : 0,
+          [rooms[currentRoomIndex].usersTurn[1]] : 1,
+        }
+        io.in(roomId).emit('get-turn', turns);
+        rooms[currentRoomIndex].usersTurn = [];
+      }
+    }
+  });
+
+  socket.on("reset-users-in-room", (roomId) => {
+    const currentRoomIndex = rooms.findIndex((room) => room.roomId === roomId);
+    if (currentRoomIndex !== -1) {
       rooms[currentRoomIndex].users = [];
     }
   });
 
-  socket.on('leave-room', ({userId, roomId}) => {
-    const abandonedRoom = rooms.find(room => 
-      room.users.find(user=> user === userId)
+  socket.on("leave-room", ({ userId, roomId }) => {
+    const abandonedRoom = rooms.find((room) =>
+      room.users.find((user) => user === userId)
     )?.roomId;
-    const abandonedRoomIndex = rooms.findIndex(room => room.roomId === roomId);
-    if(abandonedRoomIndex !== -1) {
+    const abandonedRoomIndex = rooms.findIndex(
+      (room) => room.roomId === roomId
+    );
+    if (abandonedRoomIndex !== -1) {
       socket.leave(roomId);
       rooms.splice(abandonedRoomIndex, 1);
       io.in(abandonedRoom).emit("rival-disconnect", {
         userId: userId,
-        disconnect: true
+        disconnect: true,
       });
     }
-  })
+  });
 
   socket.on("send-pokemon-data", ({ pokemon, opponentUserId }) => {
     socket.broadcast.to(opponentUserId).emit("get-pokemon-data", {
@@ -161,34 +182,33 @@ io.on("connection", (socket) => {
       // se podría cambiar esto a envío directo al id del usuario que tenga que recibirlo y así evitamos que pete en el front
 
       // io.in(roomId).emit("get-opponents-move", rooms[roomIndex].usersMoves);
-      socket.broadcast.to(roomId).emit("get-opponents-move", moveData)
-
+      socket.broadcast.to(roomId).emit("get-opponents-move", moveData);
     }
   });
 
-  socket.on('set-timer', ({userId, roomId}) => {
+  socket.on("set-timer", ({ userId, roomId }) => {
     const seconds = 20;
-    socket.broadcast.to(roomId).emit('get-timer', {
-      seconds
+    socket.broadcast.to(roomId).emit("get-timer", {
+      seconds,
     });
   });
 
-  socket.on('turn-over', ({userId, roomId}) => {
-    const room = rooms.find(room => room.roomId === roomId);
-    if(room) {
+  socket.on("turn-over", ({ userId, roomId }) => {
+    const room = rooms.find((room) => room.roomId === roomId);
+    if (room) {
       room.usersDoneWithTurn.push(userId);
-      if(room.usersDoneWithTurn.length === 2) {
+      if (room.usersDoneWithTurn.length === 2) {
         room.usersDoneWithTurn.splice(0, 2);
-        io.in(roomId).emit('get-turn-over', true);
-      }else {
-        io.in(roomId).emit('get-turn-over', false);
+        io.in(roomId).emit("get-turn-over", true);
+      } else {
+        io.in(roomId).emit("get-turn-over", false);
       }
     }
-  })
+  });
 
-  socket.on("game-over", ({userId, roomId}) => {
+  socket.on("game-over", ({ userId, roomId }) => {
     socket.broadcast.to(roomId).emit("get-game-over", {
-      userId
+      userId,
     });
   });
 
@@ -214,13 +234,11 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send-message", (data) => {
-
     // socket.emit('get message', data);
     socket.broadcast.to(data.arenaId).emit("get message", data);
     // io.sockets.emit('get message', data);
   });
 });
-
 
 server.listen(PORT, console.log(`Server is up at port ${PORT}`));
 
